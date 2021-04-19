@@ -17,7 +17,7 @@ class OrderRepository(private val client: DynamoDbAsyncClient,
     override fun saveOrder(order: OrderRequest): Mono<OrderResponse> {
 
         val partitionKey = "o#${order.PK}"
-        val sortKey = "c3#${order.SK}"
+        val sortKey = "c#${order.SK}"
 
         val item = mapOf(
             "PK" to AttributeValue.builder().s(partitionKey).build(),
