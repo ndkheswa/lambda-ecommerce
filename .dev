@@ -1,0 +1,8 @@
+export SPRING_PROFILES_ACTIVE=dev
+export cognito_client_id="79rr7i6cmgm428ngd44edmui1k"
+export cognito_client_secret=56i0c9gtfdbqdkk3jv30b9jr9utldorghvbcaj17ig12nejee1a
+export cognito_domain=learncodingrsa
+export cognito_redirect_uri=http://localhost:8080
+export server_port=8080
+export cognito_endpoint=https://learncodingrsa.auth.eu-west-1.amazoncognito.com
+export cognito_pool_id=eu-west-1_v7W8llPKp
