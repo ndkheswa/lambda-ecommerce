@@ -58,7 +58,7 @@ class OrderRepository(private val client: DynamoDbAsyncClient,
             }
     }
 
-    fun getOrders(partitionKey: String): Flux<OrderResponse> {
+    override fun getOrders(partitionKey: String): Flux<OrderResponse> {
 
         val nameMap = mapOf("#order" to "PK")
         val valueMap = mapOf(":order" to AttributeValue.builder().s(partitionKey).build())
