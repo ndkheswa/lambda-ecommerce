@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
+import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 
 @RestController
@@ -26,11 +27,16 @@ class OrderController(private val orderRepository: OrderRepository) {
             }
     }
 
-    @RequestMapping(value = ["/orders"], method = [RequestMethod.GET])
+    @RequestMapping(value = ["/order"], method = [RequestMethod.GET])
     fun getOrder(@RequestParam pk: String, @RequestParam sk: String) : Mono<ResponseEntity<OrderResponse>> {
         return orderRepository.getOrder(pk, sk)
             .map { item ->
                 ResponseEntity.status(HttpStatus.ACCEPTED).body(item)
             }
+    }
+
+    @RequestMapping(value = ["/orders"], method = [RequestMethod.GET])
+    fun getOrders(@RequestParam("partitionKey") partitionKey: String) : Flux<OrderResponse> {
+        return orderRepository.getOrders(partitionKey)
     }
 }

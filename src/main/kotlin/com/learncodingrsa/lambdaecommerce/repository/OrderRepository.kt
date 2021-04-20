@@ -4,11 +4,14 @@ import com.learncodingrsa.lambdaecommerce.model.OrderRequest
 import com.learncodingrsa.lambdaecommerce.model.OrderResponse
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Repository
+import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue
 import software.amazon.awssdk.services.dynamodb.model.GetItemRequest
 import software.amazon.awssdk.services.dynamodb.model.PutItemRequest
+import software.amazon.awssdk.services.dynamodb.model.QueryRequest
+import java.util.stream.Collectors
 
 @Repository
 class OrderRepository(private val client: DynamoDbAsyncClient,
@@ -16,8 +19,8 @@ class OrderRepository(private val client: DynamoDbAsyncClient,
 
     override fun saveOrder(order: OrderRequest): Mono<OrderResponse> {
 
-        val partitionKey = "o#${order.PK}"
-        val sortKey = "c#${order.SK}"
+        val partitionKey = "c#${order.PK}"
+        val sortKey = "o#${order.SK}"
 
         val item = mapOf(
             "PK" to AttributeValue.builder().s(partitionKey).build(),
@@ -53,6 +56,26 @@ class OrderRepository(private val client: DynamoDbAsyncClient,
             .map { resp ->
                 fromMap(resp.item())
             }
+    }
+
+    fun getOrders(partitionKey: String): Flux<OrderResponse> {
+
+        val nameMap = mapOf("#order" to "PK")
+        val valueMap = mapOf(":order" to AttributeValue.builder().s(partitionKey).build())
+
+        val qSpec = QueryRequest
+            .builder()
+            .tableName(orderTable)
+            .keyConditionExpression("#order=:order")
+            .expressionAttributeNames(nameMap)
+            .expressionAttributeValues(valueMap)
+            .build()
+
+        return  Mono.from(client.queryPaginator(qSpec)).flatMapIterable { resp ->
+            resp.items().stream().map { item ->
+                fromMap(item)
+            }.collect(Collectors.toList())
+        }
     }
 
     companion object {
