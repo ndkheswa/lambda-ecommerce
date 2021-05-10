@@ -6,6 +6,12 @@ application:
 
 cognito-domain: ${cognito_domain}
 
+logging:
+  level:
+    org:
+      springframework:
+        web: DEBUG
+
 cognito:
   redirect-uri: ${cognito_redirect_uri}
   client-id: ${cognito_client-id}

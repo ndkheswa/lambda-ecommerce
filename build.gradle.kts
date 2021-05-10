@@ -18,8 +18,8 @@ repositories {
 dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-webflux")
 	implementation("software.amazon.awssdk:dynamodb:2.10.42")
-	implementation("com.amazonaws.aws-java-sdk:1.11.1013")
-	implementation("com.amazonaws.aws-java-sdk-cognitoidp:1.11.1013")
+	implementation("software.amazon.awssdk:aws-sdk-java:2.16.57")
+	implementation("software.amazon.awssdk:cognitoidentity:2.16.57")
 	implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
 	implementation("io.projectreactor.kotlin:reactor-kotlin-extensions")
 	implementation("org.jetbrains.kotlin:kotlin-reflect")

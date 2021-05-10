@@ -11,7 +11,7 @@ import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 
 @RestController
-@CrossOrigin(origins = arrayOf("*"), allowedHeaders = ["*"])
+@CrossOrigin(origins = ["*"], allowedHeaders = ["*"])
 class OrderController(private val orderRepository: OrderRepository) {
 
     private val logger = LoggerFactory.getLogger(javaClass)
