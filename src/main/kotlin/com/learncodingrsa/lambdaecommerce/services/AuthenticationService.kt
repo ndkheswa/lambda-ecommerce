@@ -32,7 +32,7 @@ class AuthenticationService(private val client: CognitoIdentityProviderClient,
                     client.adminCreateUser(
                         AdminCreateUserRequest
                             .builder()
-                            .userPoolId("eu-west-1_v7W8llPKp")
+                            .userPoolId(poolId)
                             .username(userInfo.let { it.userName })
                             .temporaryPassword(userInfo.let { it.password} )
                             .userAttributes(AttributeType.builder().name("email").value(emailAddress).build())
