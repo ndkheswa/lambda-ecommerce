@@ -57,7 +57,7 @@ class AuthenticationService(private val client: CognitoIdentityProviderClient,
 
                 val resp: ListUsersResponse = client.listUsers(
                     ListUsersRequest.builder()
-                        .userPoolId("eu-west-1_v7W8llPKp")
+                        .userPoolId(poolId)
                         .attributesToGet("email")
                         .filter(emailQuery)
                         .build()
