@@ -1,6 +1,7 @@
 package com.learncodingrsa.lambdaecommerce.controller
 
 import com.learncodingrsa.lambdaecommerce.model.UserInfo
+import com.learncodingrsa.lambdaecommerce.model.UserInfoResponse
 import com.learncodingrsa.lambdaecommerce.services.AuthenticationService
 import org.springframework.web.bind.annotation.*
 
@@ -13,8 +14,8 @@ class CreateUserController(private val userService: AuthenticationService) {
         return userService.createNewUser(userInfo = user)
     }
 
-    @RequestMapping(value = ["/users/{email}"], method = [RequestMethod.GET])
-    fun find(@PathVariable email: String) {
-        userService.findUserByEmailAddress(email)
+    @RequestMapping(value = ["/users"], method = [RequestMethod.GET])
+    fun find(@RequestParam email: String) : UserInfoResponse? {
+        return userService.findUserByEmailAddress(email)
     }
 }
