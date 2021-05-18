@@ -21,17 +21,12 @@ class AuthenticationService(private val client: CognitoIdentityProviderClient,
                 val info: UserInfoResponse? = this.findUserByEmailAddress(emailAddress)
 
                 if (info == null) {
-                    val cognitoRequest = AdminCreateUserRequest
-                        .builder()
-                        .userPoolId(poolId)
-                        .username(userInfo.let { it.userName })
-                        .userAttributes(AttributeType.builder().name("email").value(emailAddress).build())
 
                     client.adminCreateUser(
                         AdminCreateUserRequest
                             .builder()
                             .userPoolId(poolId)
-                            .username(userInfo.let { it.userName })
+                            .username(userInfo.let { it.username })
                             .temporaryPassword(userInfo.let { it.password} )
                             .userAttributes(AttributeType.builder().name("email").value(emailAddress).build())
                             .build()
@@ -46,17 +41,17 @@ class AuthenticationService(private val client: CognitoIdentityProviderClient,
         return poolId
     }
 
-    override fun login(userName: String, password: String) : LoginInfo? {
+    override fun login(username: String, password: String) : LoginInfo? {
         var info: LoginInfo? = null
         var newPasswordRequired: Boolean = false
 
         try {
-            var sessionInfo: SessionInfo? = sessionHandler(userName, password)
+            var sessionInfo: SessionInfo? = sessionHandler(username, password)
 
             if (sessionInfo != null) {
-                val userInfo: UserInfoResponse? = getUserInfo(userName)
+                val userInfo: UserInfoResponse? = getUserInfo(username)
 
-                info = LoginInfo(userInfo!!.userName, userInfo.emailAddress, newPasswordRequired)
+                info = LoginInfo(userInfo!!.username, userInfo.emailAddress, newPasswordRequired)
 
                 val challengeResult: String = sessionInfo.challengeResult
                 if (!challengeResult.isNullOrEmpty()) {
@@ -74,12 +69,12 @@ class AuthenticationService(private val client: CognitoIdentityProviderClient,
         var challengeResponse: AdminRespondToAuthChallengeResponse? = null
 
         try {
-            var sessionInfo: SessionInfo? = sessionHandler(passwordRequest.userName, passwordRequest.oldPassword)
+            var sessionInfo: SessionInfo? = sessionHandler(passwordRequest.username, passwordRequest.oldPassword)
             val sessionString = sessionInfo?.let { it.session }
 
             if (!sessionString.isNullOrEmpty()) {
                 val challengeResponses = hashMapOf<String, String>()
-                challengeResponses[USERNAME] = passwordRequest.userName
+                challengeResponses[USERNAME] = passwordRequest.username
                 challengeResponses[PASSWORD] = passwordRequest.oldPassword
                 challengeResponses[NEW_PASSWORD] = passwordRequest.newPassword
 
@@ -101,12 +96,12 @@ class AuthenticationService(private val client: CognitoIdentityProviderClient,
         return challengeResponse
     }
 
-    override fun sessionHandler(userName: String, password: String) : SessionInfo? {
+    override fun sessionHandler(username: String, password: String) : SessionInfo? {
         var info: SessionInfo? = null
         try {
 
             val authParams = mutableMapOf<String, String>()
-            authParams["USERNAME"] = userName
+            authParams["USERNAME"] = username
             authParams["PASSWORD"] = password
 
             val authResult = client.adminInitiateAuth(
@@ -135,7 +130,7 @@ class AuthenticationService(private val client: CognitoIdentityProviderClient,
         return info
     }
 
-    override fun getUserInfo(userName: String) : UserInfoResponse? {
+    override fun getUserInfo(username: String) : UserInfoResponse? {
         var info: UserInfoResponse? = null
         try {
 
@@ -143,7 +138,7 @@ class AuthenticationService(private val client: CognitoIdentityProviderClient,
                 AdminGetUserRequest
                     .builder()
                     .userPoolId(poolId)
-                    .userPoolId(userName)
+                    .username(username)
                     .build()
             )
 
@@ -187,7 +182,7 @@ class AuthenticationService(private val client: CognitoIdentityProviderClient,
 
                     if (users.size == 1) {
                         val user = users[0]
-                        val userName: String = user.username()
+                        val username: String = user.username()
                         var emailAddress: String? = null
                         val attributes: List<AttributeType>? = user.attributes()
 
@@ -197,8 +192,8 @@ class AuthenticationService(private val client: CognitoIdentityProviderClient,
                                     emailAddress = attr.value()
                                 }
                             }
-                            if (!userName.isNullOrBlank() ) {
-                                info = emailAddress?.let { UserInfoResponse(userName, it) }
+                            if (!username.isNullOrBlank() ) {
+                                info = emailAddress?.let { UserInfoResponse(username, it) }
                             }
                         }
 
