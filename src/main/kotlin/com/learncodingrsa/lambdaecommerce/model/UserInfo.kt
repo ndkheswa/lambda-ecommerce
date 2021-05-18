@@ -14,5 +14,5 @@ data class UserInfoResponse(
 data class LoginInfo(
     val userName: String,
     val emailAddress: String,
-    val newPasswordRequired: Boolean
+    var newPasswordRequired: Boolean
 )

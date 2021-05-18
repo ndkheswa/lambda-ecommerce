@@ -11,7 +11,7 @@ class AuthenticationService(private val client: CognitoIdentityProviderClient,
                             @Value("\${cognito.pool-id}") private val poolId: String,
                             @Value("\${cognito.client-id}") private val clientId: String) : AuthenticationInterface {
 
-    fun createNewUser(userInfo: UserInfo?) : String {
+    override fun createNewUser(userInfo: UserInfo?) : String {
         try {
 
             val emailAddress: String? = userInfo?.let { it.emailAddress }
@@ -46,18 +46,31 @@ class AuthenticationService(private val client: CognitoIdentityProviderClient,
         return poolId
     }
 
-    /**
-     * fun login(userName: String, password: String) : LoginInfo? {
-    var info: LoginInfo? = null
-    var sessionInfo: SessionInfo? = sessionHandler(userName, password)
+    override fun login(userName: String, password: String) : LoginInfo? {
+        var info: LoginInfo? = null
+        var newPasswordRequired: Boolean = false
 
-    if (sessionInfo != null) {
-    val userInfo: UserInfo? = getUserInfo()
-    }
-    }
-     */
+        try {
+            var sessionInfo: SessionInfo? = sessionHandler(userName, password)
 
-    fun changeTemporaryPassword(passwordRequest: PasswordRequest) : AdminRespondToAuthChallengeResponse? {
+            if (sessionInfo != null) {
+                val userInfo: UserInfoResponse? = getUserInfo(userName)
+
+                info = LoginInfo(userInfo!!.userName, userInfo.emailAddress, newPasswordRequired)
+
+                val challengeResult: String = sessionInfo.challengeResult
+                if (!challengeResult.isNullOrEmpty()) {
+                    info.newPasswordRequired = challengeResult == ChallengeNameType.NEW_PASSWORD_REQUIRED.name
+                }
+            }
+        } catch (e: CognitoIdentityProviderException) {
+            e.awsErrorDetails().errorMessage()
+        }
+
+        return info
+    }
+
+    override fun changeTemporaryPassword(passwordRequest: PasswordRequest) : AdminRespondToAuthChallengeResponse? {
         var challengeResponse: AdminRespondToAuthChallengeResponse? = null
 
         try {
@@ -88,7 +101,7 @@ class AuthenticationService(private val client: CognitoIdentityProviderClient,
         return challengeResponse
     }
 
-    fun sessionHandler(userName: String, password: String) : SessionInfo? {
+    override fun sessionHandler(userName: String, password: String) : SessionInfo? {
         var info: SessionInfo? = null
         try {
 
@@ -122,13 +135,38 @@ class AuthenticationService(private val client: CognitoIdentityProviderClient,
         return info
     }
 
-    /**
-     * fun getUserInfo(userName: String) {
+    override fun getUserInfo(userName: String) : UserInfoResponse? {
+        var info: UserInfoResponse? = null
+        try {
 
+            val userResponse = client.adminGetUser(
+                AdminGetUserRequest
+                    .builder()
+                    .userPoolId(poolId)
+                    .userPoolId(userName)
+                    .build()
+            )
+
+            val userAttr: List<AttributeType> = userResponse.userAttributes()
+            var emailAddr: String? = null
+            for (attr: AttributeType in userAttr) {
+                if (attr.name().equals(EMAIL)) {
+                    emailAddr = attr.value()
+                }
+            }
+
+            val responseUsername: String = userResponse.username()
+            if (!responseUsername.isNullOrEmpty()) {
+                info = emailAddr?.let { UserInfoResponse(responseUsername, it) }
+            }
+        } catch (e: CognitoIdentityProviderException) {
+            e.awsErrorDetails().errorMessage()
+        }
+
+        return info
     }
-     */
 
-    fun findUserByEmailAddress(email: String?) : UserInfoResponse? {
+    override fun findUserByEmailAddress(email: String?) : UserInfoResponse? {
         var info: UserInfoResponse? = null
 
         if (email != null && email.length >= 0) {
@@ -175,6 +213,7 @@ class AuthenticationService(private val client: CognitoIdentityProviderClient,
     }
 
     companion object {
+        private val EMAIL: String = "email"
         private val USERNAME: String = "USERNAME"
         private val PASSWORD: String = "PASSWORD"
         private val NEW_PASSWORD: String = "NEW_PASSWORD"
