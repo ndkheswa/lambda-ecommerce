@@ -5,3 +5,8 @@ data class PasswordRequest(
     val oldPassword: String,
     val newPassword: String
 )
+
+data class LoginRequest(
+    val username: String,
+    val password: String,
+)

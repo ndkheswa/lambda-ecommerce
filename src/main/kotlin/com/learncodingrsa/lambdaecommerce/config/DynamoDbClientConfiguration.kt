@@ -15,7 +15,7 @@ class DynamoDbClientConfiguration(@Value("\${application.dynamo.region}") privat
     @Bean
     fun dynamoDbAsyncClient(): DynamoDbAsyncClient? {
         return DynamoDbAsyncClient.builder()
-            .region(Region.of(region))
+            .region(Region.EU_WEST_1)
             .endpointOverride(URI.create(endpoint))
             .credentialsProvider(DefaultCredentialsProvider.builder().build())
             .build()

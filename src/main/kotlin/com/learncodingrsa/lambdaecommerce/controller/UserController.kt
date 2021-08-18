@@ -1,11 +1,9 @@
 package com.learncodingrsa.lambdaecommerce.controller
 
-import com.learncodingrsa.lambdaecommerce.model.LoginInfo
-import com.learncodingrsa.lambdaecommerce.model.SessionInfo
-import com.learncodingrsa.lambdaecommerce.model.UserInfo
-import com.learncodingrsa.lambdaecommerce.model.UserInfoResponse
+import com.learncodingrsa.lambdaecommerce.model.*
 import com.learncodingrsa.lambdaecommerce.services.AuthenticationService
 import org.springframework.web.bind.annotation.*
+import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminRespondToAuthChallengeResponse
 
 @RestController
 @CrossOrigin(origins = ["*"], allowedHeaders = ["*"])
@@ -22,8 +20,13 @@ class UserController(private val userService: AuthenticationService) {
     }
 
     @RequestMapping(value = ["/users/login"], method = [RequestMethod.POST])
-    fun login(username: String, password: String) : LoginInfo? {
-        return userService.login(username, password)
+    fun login(@RequestBody loginRequest: LoginRequest) : LoginInfo? {
+        return userService.login(loginRequest)
+    }
+
+    @RequestMapping(value = ["/users/change-password"], method = [RequestMethod.POST])
+    fun changeTemporaryPassword(@RequestBody passwordRequest: PasswordRequest) : Unit {
+        userService.changeTemporaryPassword(passwordRequest)
     }
 
     @RequestMapping(value = ["/users/session"], method = [RequestMethod.GET])

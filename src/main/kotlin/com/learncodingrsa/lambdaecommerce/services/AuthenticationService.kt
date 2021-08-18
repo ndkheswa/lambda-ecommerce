@@ -11,7 +11,7 @@ class AuthenticationService(private val client: CognitoIdentityProviderClient,
                             @Value("\${cognito.pool-id}") private val poolId: String,
                             @Value("\${cognito.client-id}") private val clientId: String) : AuthenticationInterface {
 
-    override fun createNewUser(userInfo: UserInfo?) : String {
+    fun createNewUser(userInfo: UserInfo?) : String {
         try {
 
             val emailAddress: String? = userInfo?.let { it.emailAddress }
@@ -41,15 +41,15 @@ class AuthenticationService(private val client: CognitoIdentityProviderClient,
         return poolId
     }
 
-    override fun login(username: String, password: String) : LoginInfo? {
+    fun login(loginRequest: LoginRequest) : LoginInfo? {
         var info: LoginInfo? = null
         var newPasswordRequired: Boolean = false
 
         try {
-            var sessionInfo: SessionInfo? = sessionHandler(username, password)
+            var sessionInfo: SessionInfo? = sessionHandler(loginRequest.username, loginRequest.password)
 
             if (sessionInfo != null) {
-                val userInfo: UserInfoResponse? = getUserInfo(username)
+                val userInfo: UserInfoResponse? = getUserInfo(loginRequest.username)
 
                 info = LoginInfo(userInfo!!.username, userInfo.emailAddress, newPasswordRequired)
 
@@ -65,14 +65,14 @@ class AuthenticationService(private val client: CognitoIdentityProviderClient,
         return info
     }
 
-    override fun changeTemporaryPassword(passwordRequest: PasswordRequest) : AdminRespondToAuthChallengeResponse? {
+    fun changeTemporaryPassword(passwordRequest: PasswordRequest) : Unit {
         var challengeResponse: AdminRespondToAuthChallengeResponse? = null
 
         try {
             var sessionInfo: SessionInfo? = sessionHandler(passwordRequest.username, passwordRequest.oldPassword)
             val sessionString = sessionInfo?.let { it.session }
 
-            if (!sessionString.isNullOrEmpty()) {
+            if (sessionString != null && sessionString.isNotEmpty()) {
                 val challengeResponses = hashMapOf<String, String>()
                 challengeResponses[USERNAME] = passwordRequest.username
                 challengeResponses[PASSWORD] = passwordRequest.oldPassword
@@ -92,11 +92,9 @@ class AuthenticationService(private val client: CognitoIdentityProviderClient,
         } catch (e: CognitoIdentityProviderException) {
             e.awsErrorDetails().errorMessage()
         }
-
-        return challengeResponse
     }
 
-    override fun sessionHandler(username: String, password: String) : SessionInfo? {
+    fun sessionHandler(username: String, password: String) : SessionInfo? {
         var info: SessionInfo? = null
         try {
 
@@ -114,14 +112,16 @@ class AuthenticationService(private val client: CognitoIdentityProviderClient,
             )
 
             if (authResult != null) {
-                val session = authResult.session()
+                val session: String = authResult.session()
                 var accessToken: String? = null
                 val resultType = authResult.authenticationResult()
-                if (resultType != null) {
-                    accessToken = resultType.accessToken()
+                accessToken = if (resultType != null) {
+                    resultType.accessToken()
+                } else {
+                    ""
                 }
                 val challengeResult = authResult.challengeName().name
-                info = accessToken?.let { SessionInfo(session, it, challengeResult) }
+                info = SessionInfo(session, accessToken!!, challengeResult)
             }
         } catch (e: CognitoIdentityProviderException) {
             e.awsErrorDetails().errorMessage()
@@ -130,7 +130,7 @@ class AuthenticationService(private val client: CognitoIdentityProviderClient,
         return info
     }
 
-    override fun getUserInfo(username: String) : UserInfoResponse? {
+    fun getUserInfo(username: String) : UserInfoResponse? {
         var info: UserInfoResponse? = null
         try {
 
@@ -161,7 +161,7 @@ class AuthenticationService(private val client: CognitoIdentityProviderClient,
         return info
     }
 
-    override fun findUserByEmailAddress(email: String?) : UserInfoResponse? {
+    fun findUserByEmailAddress(email: String?) : UserInfoResponse? {
         var info: UserInfoResponse? = null
 
         if (email != null && email.length >= 0) {

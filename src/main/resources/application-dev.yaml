@@ -1,3 +1,4 @@
+
 application:
   dynamo:
     region: "eu-west-1"
@@ -38,4 +39,3 @@ spring:
             token-uri: ${cognito_endpoint}/oauth2/token
             user-info-uri: ${cognito_endpoint}/oauth2/userInfo
             jwk-set-uri: https://cognito-idp_eu-west-1_amazonaws_com/${cognito_pool_id}/_well-known/jwks_json
-            userNameAttribute: cognito:username
